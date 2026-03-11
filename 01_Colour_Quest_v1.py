@@ -36,8 +36,9 @@ def get_round_colours():
 
     median = (int_scores[1] + int_scores[2]) / 2
     median = round_ans(median)
+    highest = int_scores[-1]
 
-    return round_colours, median
+    return round_colours, median, highest
 
 def round_ans(val):
 
@@ -81,15 +82,41 @@ class StartGame:
                                       width=10)
         self.num_rounds_entry.grid(row=0, column=0, padx=10, pady=10)
 
-        self.play_button = Button(self.start_frame, font=("Arial", 16, "bold"),
+        self.play_button = Button(self.entry_area_frame, font=("Arial", 16, "bold"),
                                   fg="#FFFFFF", bg="#0057D8", text="Play", width=10,
                                   command=self.check_rounds)
-        self.play_button.grid(row=4, column=0)
+        self.play_button.grid(row=0, column=1)
 
     def check_rounds(self):
 
-        Play(5)
-        root.withdraw()
+        rounds_wanted = self.num_rounds_entry.get()
+
+        self.choose_label.config(fg="#009900", font=("Arial", 12, "bold"))
+        self.num_rounds_entry.config(bg="#FFFFFF")
+
+        error = "Oops - Please choose a whole number more than zero."
+        has_errors = "no"
+
+        try:
+            rounds_wanted = int(rounds_wanted)
+            if rounds_wanted > 0:
+
+                self.num_rounds_entry.delete(0, END)
+                self.choose_label.config(text="How many rounds do you want to play?")
+                Play(rounds_wanted)
+                root.withdraw()
+
+            else:
+                has_errors = "yes"
+
+        except ValueError:
+            has_errors = "yes"
+
+        if has_errors == "yes":
+            self.choose_label.config(text=error, fg="#990000",
+                                     font=("Arial", 10, "bold"))
+            self.num_rounds_entry.config(bg="#F4CCCC")
+            self.num_rounds_entry.delete(0, END)
 
 class Play:
 
@@ -105,7 +132,7 @@ class Play:
 
         self.round_colour_list = []
         self.all_scores_list = []
-        self.all_medians_list = []
+        self.all_high_score_list = []
 
         self.play_box = Toplevel()
 
@@ -182,9 +209,10 @@ class Play:
 
         rounds_wanted = self.rounds_wanted.get()
 
-        self.round_colour_list, median = get_round_colours()
+        self.round_colour_list, median, highest = get_round_colours()
 
         self.target_score.set(median)
+        self.all_high_score_list.append(highest)
 
         self.heading_label.config(text=f"Round {rounds_played} of {rounds_wanted}")
         self.target_label.config(text=f"Target Score: {median}",
@@ -218,6 +246,9 @@ class Play:
             self.all_scores_list.append(0)
 
         self.results_label.config(text=result_text, bg=result_bg)
+
+        print("all scores:", self.all_scores_list)
+        print("highest scores:", self.all_high_score_list)
 
         self.next_button.config(state=NORMAL)
         self.stats_button.config(state=NORMAL)
